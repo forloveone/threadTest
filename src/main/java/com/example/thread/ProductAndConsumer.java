@@ -1,6 +1,5 @@
 package com.example.thread;
 
-import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
 /**
