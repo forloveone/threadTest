@@ -4,6 +4,10 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * 阻塞队列 test
+ * todo 常用阻塞队列
+ */
 public class BlockingQueueTest {
     public static void main(String[] args) throws InterruptedException {
         BlockingQueue queue = new ArrayBlockingQueue(0);
@@ -19,9 +23,7 @@ public class BlockingQueueTest {
         Object poll1 = queue.poll();
         System.out.println(poll1);
 
-
         boolean remove = queue.remove(2);
         System.out.println(remove);
-
     }
 }

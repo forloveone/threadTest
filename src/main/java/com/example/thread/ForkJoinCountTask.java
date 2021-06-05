@@ -1,4 +1,4 @@
-package com.example.thread.fork_join;
+package com.example.thread;
 
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ForkJoinPool;
@@ -8,11 +8,11 @@ import java.util.concurrent.RecursiveTask;
 /**
  * 计算 1+2+3+4
  */
-public class CountTask extends RecursiveTask<Integer> {
+public class ForkJoinCountTask extends RecursiveTask<Integer> {
     private int start;
     private int end;
 
-    public CountTask(int start, int end) {
+    public ForkJoinCountTask(int start, int end) {
         this.start = start;
         this.end = end;
     }
@@ -34,8 +34,8 @@ public class CountTask extends RecursiveTask<Integer> {
             }
         } else {
             int middle = (start + end) / 2;
-            CountTask t1 = new CountTask(start, middle);
-            CountTask t2 = new CountTask(middle + 1, end);
+            ForkJoinCountTask t1 = new ForkJoinCountTask(start, middle);
+            ForkJoinCountTask t2 = new ForkJoinCountTask(middle + 1, end);
             //执行子任务
             t1.fork();
             t2.fork();
@@ -49,7 +49,7 @@ public class CountTask extends RecursiveTask<Integer> {
 
     public static void main(String[] args) throws ExecutionException, InterruptedException {
         ForkJoinPool pool = new ForkJoinPool();
-        CountTask task = new CountTask(1, 4);
+        ForkJoinCountTask task = new ForkJoinCountTask(1, 4);
         //判断出现异常的情况,好像用法不对
 //        if (task.isCompletedAbnormally()) {
 //            System.out.println(task.getException());
