@@ -1,4 +1,4 @@
-package com.example.thread.thread.fork_join;
+package com.example.thread.fork_join;
 
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ForkJoinPool;

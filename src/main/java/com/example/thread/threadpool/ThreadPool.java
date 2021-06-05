@@ -1,4 +1,4 @@
-package com.example.thread.thread.threadpool;
+package com.example.thread.threadpool;
 
 public interface ThreadPool<Job extends Runnable> {
     //执行一个任务

@@ -1,14 +1,24 @@
-package com.example.thread.thread.dbpool;
+package com.example.thread;
 
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
 import java.sql.Connection;
 import java.util.LinkedList;
+import java.util.concurrent.TimeUnit;
 
 /**
+ * 锁的应用
+ * 代理模式
  * 摘自 java并发编程基础 一书
  */
 public class SimpleConnectionPool {
     private LinkedList<Connection> pool = new LinkedList<Connection>();
 
+    /**
+     * 初始化 线程池
+     * @param size 大小
+     */
     public SimpleConnectionPool(int size) {
         if (size > 0) {
             for (int i = 0; i < size; i++) {
@@ -19,8 +29,6 @@ public class SimpleConnectionPool {
 
     /**
      * 释放数据库连接
-     *
-     * @param connection
      */
     public void releaseConnection(Connection connection) {
         if (connection != null) {
@@ -33,12 +41,15 @@ public class SimpleConnectionPool {
         }
     }
 
-    //在时间内无法获取连接会返回null
+    /**
+     * 在时间内无法获取连接会返回null
+     */
     public Connection fetchConnection(long mills) throws InterruptedException {
         synchronized (pool) {
             if (mills <= 0) {
                 //完全超时
                 while (pool.isEmpty()) {
+                    //等待数据库连接归还 pool.notifyAll() ,poll is not empty
                     pool.wait();
                 }
                 return pool.removeFirst();
@@ -47,6 +58,7 @@ public class SimpleConnectionPool {
                 long remaining = mills;
                 while (pool.isEmpty() && remaining > 0) {
                     pool.wait(remaining);
+                    //计算剩余时间
                     remaining = future - System.currentTimeMillis();
                 }
                 Connection result = null;
@@ -58,4 +70,26 @@ public class SimpleConnectionPool {
         }
     }
 
+}
+
+
+class ConnectionDriver {
+    static class ConnectionHandler implements InvocationHandler {
+
+        @Override
+        public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+            if (method.getName().equals("commit")) {
+                TimeUnit.MILLISECONDS.sleep(100);
+            }
+            return null;
+        }
+    }
+
+    //创建一个Connection的代理,在commit时休眠100毫秒.
+    public static final Connection createConnection() {
+        return (Connection) Proxy.newProxyInstance(
+                ConnectionDriver.class.getClassLoader(),
+                new Class<?>[]{Connection.class},
+                new ConnectionHandler());
+    }
 }

@@ -1,4 +1,4 @@
-package com.example.thread.thread;
+package com.example.thread;
 
 import java.util.List;
 import java.util.concurrent.Callable;

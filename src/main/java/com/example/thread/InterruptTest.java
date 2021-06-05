@@ -1,4 +1,4 @@
-package com.example.thread.thread;
+package com.example.thread;
 
 /**
  * Thread的interrrupt方法，本质不是用来中断一个线程。是将线程设置一个中断状态。

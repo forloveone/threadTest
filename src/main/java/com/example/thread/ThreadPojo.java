@@ -1,4 +1,4 @@
-package com.example.thread.thread;
+package com.example.thread;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;
