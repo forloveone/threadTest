@@ -1,5 +1,6 @@
-package com.example.thread;
+package com.example.thread.executor;
 
+import com.example.thread.RemoveIntger2Thread;
 import com.google.common.collect.Lists;
 import org.apache.commons.lang3.RandomUtils;
 import org.junit.Before;
@@ -13,15 +14,16 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 /**
+ * todo
  * arraylist中有两万个，0-9的int型数据，怎么快速删除为2的
  * 多线程每个线程做一部分，并把结果合并起来（怎么实现）
- * <p>
- * 为什么没有        list.removeIf(next -> next == 2); 快?
+ * 为什么没有 list.removeIf(next -> next == 2); 快?
  */
 public class ThreadFind {
 
     private List<Integer> list = new ArrayList<>();
 
+    //初始化测试数据
     @Before
     public void init() {
         for (int i = 0; i < 2000000; i++) {
@@ -42,14 +44,15 @@ public class ThreadFind {
     public void thread4() throws InterruptedException, ExecutionException {
         //34937 没有想象中的效率提高?  40448
         //首先把list切分成小块,多线程每个线程做删除,最后在合并结果
-        long startTime = System.currentTimeMillis();
         List<Integer> listTrue = new ArrayList<>(2000000);
         List<List<Integer>> lists = splitList(list, 500000);
+        long startTime = System.currentTimeMillis();
         ExecutorService threadPool = Executors.newCachedThreadPool();
         for (List<Integer> list : lists) {
-            List<Integer> listTemp = threadFenDan(list, threadPool);
-            listTrue.addAll(listTemp);
+            Future<List> submit = threadPool.submit(new RemoveIntger2Thread(list));
+//          listTrue.addAll(listTemp);
         }
+
         long endTime = System.currentTimeMillis();
         System.out.println(endTime - startTime);
         System.out.println();
@@ -61,14 +64,7 @@ public class ThreadFind {
         return list1;
     }
 
-    /**
-     * 把list平均成多少份
-     *
-     * @param source
-     * @param n
-     * @param <T>
-     * @return
-     */
+    //---------------------------------------把list平均成多少份---------
     public static <T> List<List<T>> averageAssign(List<T> source, int n) {
         List<List<T>> result = new ArrayList<List<T>>();
         int remaider = source.size() % n; //(先计算出余数)
@@ -91,4 +87,5 @@ public class ThreadFind {
     private List<List<Integer>> splitList(List<Integer> list, int groupSize) {
         return Lists.partition(list, groupSize); // 使用guava
     }
+    //---------------------------------------把list平均成多少份---------
 }

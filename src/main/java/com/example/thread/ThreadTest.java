@@ -10,7 +10,8 @@ import java.util.concurrent.locks.ReentrantLock;
 
 public class ThreadTest {
     /**
-     * sleep join
+     * sleep
+     * join
      */
     @Test
     public void test() throws InterruptedException {
@@ -44,11 +45,13 @@ public class ThreadTest {
         System.out.println("join test");
     }
 
-    //不能使用Test测试,没有看出效果,用main方法测试
-    //当JVM发现只有守护线程在运行的时候,JVM会自动的关闭守护线程,然后关闭JVM
-    //    @Test
+    /**
+     * 守护线程
+     * 不能使用Test测试,没有看出效果,用main方法测试
+     * 当JVM发现 只有守护线程 在运行的时候,JVM会自动的关闭守护线程,然后关闭JVM
+     */
     public void daemoThread() {
-        // public static void main(String[] args) {
+//    public static void main(String[] args) {
         class DaemoThread extends Thread {
             public DaemoThread(String deamothrea) {
                 super(deamothrea);
@@ -59,7 +62,7 @@ public class ThreadTest {
 
             @Override
             public void run() {
-                for (int i = 0; i < 10000; i++) {
+                for (int i = 0; i < 100000; i++) {
                     System.out.println("daemo Thread" + i);
                 }
             }
@@ -71,8 +74,11 @@ public class ThreadTest {
         System.out.println("1");
     }
 
-    @Test
+    /**
+     * 启动线程并命名
+     */
     public void runAble() {
+//    public static void main(String[] args) {
         class TempThread implements Runnable {
             @Override
             public void run() {
@@ -87,6 +93,9 @@ public class ThreadTest {
 
     private int a;
 
+    /**
+     * 线程中断
+     */
     @Test
     public void test2() throws InterruptedException {
         Thread t = new Thread() {
@@ -104,14 +113,22 @@ public class ThreadTest {
             }
         };
         t.start();
-        t.interrupt();
-//        System.out.println(t.isInterrupted());
-//        System.out.println(t.isAlive());
+
+        System.out.println(t.isInterrupted());
+        System.out.println(t.isAlive());
         //如果主线程 直接去a 为 0
-        Thread.sleep(10);
+        Thread.sleep(100);
+        t.interrupt();
+        System.out.println(t.isInterrupted());
+        //等待线程结束
+        t.join();
+        System.out.println(t.isAlive());
         System.out.println(a);
     }
 
+    /**
+     * 线程启动
+     */
     @Test
     public void call() throws Exception {
         class TempTest implements Callable<String> {
@@ -136,27 +153,52 @@ public class ThreadTest {
      */
     @Test
     public void threadLocal() throws InterruptedException {
+        class ThreadPojo {
+            ThreadLocal<Map<String, String>> threadPrivateMap = new ThreadLocal<>();
+            private String name;
+
+            public ThreadLocal<Map<String, String>> getThreadPrivateMap() {
+                return threadPrivateMap;
+            }
+
+            public void setThreadPrivateMap(ThreadLocal<Map<String, String>> threadPrivateMap) {
+                this.threadPrivateMap = threadPrivateMap;
+            }
+
+            public String getName() {
+                return name;
+            }
+
+            public void setName(String name) {
+                this.name = name;
+            }
+        }
+
         ThreadPojo test = new ThreadPojo();
+
         Thread t1 = new Thread() {
             @Override
             public void run() {
-                Map map = new HashMap<>();
+                Map<String, String> map = new HashMap<>();
                 map.put("1", "123");
+                //放入到 threadLocal 中
                 test.getThreadPrivateMap().set(map);
-                Map to = test.getThreadPrivateMap().get();
+                //在同一个线程中,可以正确获取数据
+                Map<String, String> to = test.getThreadPrivateMap().get();
                 System.out.println(to.get("1"));
             }
         };
         t1.start();
         Thread.sleep(5000);
-        Map mainMap = test.getThreadPrivateMap().get();
+        //在不同线程中,获取数据结果为null
+        Map<String, String> mainMap = test.getThreadPrivateMap().get();
         mainMap.get("1");
     }
 
     /**
-     * 判断某个线程是否持有对象监视器(就是锁)
+     * 判断某个线程是否持有某个锁
+     * Thread.holdsLock(obj)
      */
-    //    @Test
     public void lock() {
 //    public static void main(String[] args) {
         Thread t1 = new Thread() {
@@ -178,12 +220,13 @@ public class ThreadTest {
     public static void testLock(Thread thread) throws InterruptedException {
         synchronized (obj) {
             System.out.println("业务逻辑");
-            System.out.println("持有锁判定" + thread.holdsLock(obj));
+            System.out.println("持有锁判定" + Thread.holdsLock(obj));
+//            System.out.println("持有锁判定" + thread.holdsLock(obj));
         }
     }
 
     /**
-     * 死锁简单示例
+     * 死锁:
      * 两个线程里面分别持有两个Object对象 ,并请求对方的对象
      * 这个例子线程1一直没有释放锁,并请求锁2,线程2持有锁2并请求锁1,造成死锁
      * 线程 dump 信息
@@ -209,7 +252,6 @@ public class ThreadTest {
      * Locked ownable synchronizers:
      * - None
      */
-//    @Test
     public void deadLock() {
 //    public static void main(String[] args) {
 
@@ -217,7 +259,7 @@ public class ThreadTest {
             @Override
             public void run() {
                 try {
-                    dead1(this.getName());
+                    getLock1(this.getName());
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -229,7 +271,7 @@ public class ThreadTest {
             @Override
             public void run() {
                 try {
-                    dead2(this.getName());
+                    getLock2(this.getName());
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -238,45 +280,19 @@ public class ThreadTest {
         t2.start();
     }
 
-    public static void dead1(String name) throws InterruptedException {
+    public static void getLock1(String name) throws InterruptedException {
         synchronized (obj) {
             System.out.println(name + "获得第一个锁");
-            //想持有第二个锁
-            dead2(name);
+            //想持有第二个锁 这个地方有可能创造死锁, 也有可能造成java.lang.StackOverflowError
+            getLock2(name);
         }
     }
 
-    public static void dead2(String name) throws InterruptedException {
+    public static void getLock2(String name) throws InterruptedException {
         synchronized (obj2) {
             System.out.println(name + "获得第二个锁");
-            dead1(name);
+            getLock1(name);
         }
-    }
-
-    public void threadPoolSize() {
-//    public static void main(String[] args) {
-        Thread t1 = new Thread() {
-            @Override
-            public void run() {
-                for (int i = 0; i < 100; i++) {
-                    System.out.println("hello   " + i);
-                }
-            }
-        };
-        Thread t2 = new Thread() {
-            @Override
-            public void run() {
-                for (int i = 0; i < 100; i++) {
-                    System.out.println("hello2  " + i);
-                }
-            }
-        };
-        //最多只有一个线程可以活动,如果多个提交会等到线程可用为止
-//        ExecutorService threadPool = Executors.newFixedThreadPool(1);
-        ExecutorService threadPool = Executors.newFixedThreadPool(2);
-        threadPool.submit(t1);
-        threadPool.submit(t2);
-        threadPool.shutdown();
     }
 
     /**
@@ -284,8 +300,8 @@ public class ThreadTest {
      * 如果线程是因为调用了wait()、sleep()或者join()方法而导致的 阻塞，可以中断线程，并且通过抛出InterruptedException来唤醒它
      * 如果线程遇到了IO阻塞，无能为力，因为IO是操作系统实现的
      */
-//    public void weak() {
-    public static void main(String[] args) {
+    public void weak() {
+//    public static void main(String[] args) {
         Thread t = new Thread() {
             @Override
             public void run() {
@@ -303,10 +319,12 @@ public class ThreadTest {
             }
         };
         t.start();
+
         //中断此线程
-//        t.interrupt();
-//        boolean interrupted = t.isInterrupted();
-//        System.out.println(interrupted);
+        t.interrupt();
+        boolean interrupted = t.isInterrupted();
+        System.out.println(interrupted);
+
         for (int i = 0; i < 100; i++) {
             System.out.println("业务逻辑整理" + i);
         }
@@ -315,41 +333,12 @@ public class ThreadTest {
     private static Lock lock = new ReentrantLock();
     private static volatile int value;
 
-    /*
-        完成了给reentrantLock方法“上锁”
-        if (myLock.tryLock()) {
-            try {
-                …
-            } finally {
-                myLock.unlock();
-            }
-        } else {
-            //做其他的工作
-        }
+
+    /**
+     * 原子性 value++
      */
-    //这个方法等价于给方法加 synchronized
-    public static void reentrantLock(String name) {
-        lock.lock();
-        try {
-            value++;
-            System.out.println(name + "  " + value);
-        } finally {
-            lock.unlock();
-        }
-    }
-
-    public synchronized void add() throws InterruptedException {
-        while (value <= 5) {
-            //wait方法添加一个线程到这个条件的等待集中；
-            //notifyAll / notify方法会唤醒等待集中的线程
-            wait();
-        }
-        value++;
-        notifyAll();
-    }
-
-    //    public static void main(String[] args) throws InterruptedException {
     public void reentrantLock() throws InterruptedException {
+//    public static void main(String[] args) throws InterruptedException {
         Thread t1 = new Thread() {
             @Override
             public void run() {
@@ -373,32 +362,62 @@ public class ThreadTest {
         System.out.println(value);
     }
 
-    @Test
-    public void thisOutSide() {
-
+    /*
+        完成了给reentrantLock方法“上锁”
+        if (myLock.tryLock()) {
+            try {
+                …
+            } finally {
+                myLock.unlock();
+            }
+        } else {
+            //做其他的工作
+        }
+     */
+    public static void reentrantLock(String name) {
+        lock.lock();
+        try {
+            value++;
+            System.out.println(name + "  " + value);
+        } finally {
+            lock.unlock();
+        }
     }
 
+    /**
+     * ConcurrentHashMap
+     * CopyOnWriteArrayList
+     */
     @Test
     public void threadCollection() throws InterruptedException {
         //hashMap的线程安全版本
-        ConcurrentHashMap map = new ConcurrentHashMap();
+        ConcurrentHashMap<String, String> map = new ConcurrentHashMap<>();
         map.put("1", "map1");
         map.put("2", "map1");
         map.put("3", "map1");
         map.put("4", "map1");
 
-        CopyOnWriteArrayList list = new CopyOnWriteArrayList();
+        CopyOnWriteArrayList<String> list = new CopyOnWriteArrayList<>();
         list.add("1");
         list.add("2");
         list.add("3");
     }
 
-    private static boolean waitAndNotifyFlag = true;
-    private static Object waitAndNotifyObj = new Object();
-    private static WaitAndNotifyLogicObject waiObj = new WaitAndNotifyLogicObject();
 
-    //一个线程修改了一个对象的值,而另一个线程感知到了变化,然后进行相应的操作.
+    /**
+     * todo 不成熟的生产者消费者(想测试 wait 和 notify)
+     * 一个线程修改了一个对象的值,而另一个线程感知到了变化,然后进行相应的操作.
+     */
     //页实现了超时 切换逻辑
+    private static boolean waitAndNotifyFlag = true;
+    private static final Object waitAndNotifyObj = new Object();
+    private static final WaitAndNotifyLogicObject waiObj = new WaitAndNotifyLogicObject();
+
+    static class WaitAndNotifyLogicObject {
+        public String name;
+        public int age;
+    }
+
     public void waitAndNotify() throws InterruptedException {
 //    public static void main(String[] args) throws InterruptedException {
         Thread consumer = new Thread(new Consumer(), "Consumer");
@@ -450,23 +469,17 @@ public class ThreadTest {
         }
     }
 
-    static class WaitAndNotifyLogicObject {
-        public String name;
-        public int age;
-    }
-
-
-    private static final Exchanger<String> exchangerStr = new Exchanger<>();
-
-    private static ExecutorService pool = Executors.newFixedThreadPool(2);
 
     /**
      * Exchanger 用于进行线程间的数据交换.它提供一个同步点,在这个同步点,两个线程可以交换彼此的数据.
      * <p>
      * 如果一个线程想执行exchange() 它会一直等待第二个线程也执行exchange方法.
      */
-//    public static void main(String[] args) {
-    public void exchanger() {
+    private static final Exchanger<String> exchangerStr = new Exchanger<>();
+
+    public static void main(String[] args) {
+//    public void exchanger() {
+        ExecutorService pool = Executors.newFixedThreadPool(2);
         pool.submit(new Thread(new A()));
         pool.submit(new Thread(new B()));
         pool.shutdown();
@@ -476,7 +489,7 @@ public class ThreadTest {
 
         @Override
         public void run() {
-            String a = "tesaA";
+            String a = "testA";
             try {
                 String exchange = exchangerStr.exchange(a);
                 System.out.println("A交换到的数据" + exchange + " A的原数据" + a);
@@ -490,7 +503,7 @@ public class ThreadTest {
 
         @Override
         public void run() {
-            String b = "tesaB";
+            String b = "testB";
             try {
                 Thread.sleep(10000);
             } catch (InterruptedException e) {
