@@ -7,14 +7,15 @@ import java.util.concurrent.LinkedBlockingQueue;
  * put 和 take会一直阻塞
  */
 public class ProductAndConsumer {
-    private static LinkedBlockingQueue blockQueue = new LinkedBlockingQueue(100);
+    private static final LinkedBlockingQueue<Integer> blockQueue = new LinkedBlockingQueue<>(100);
 
     public static void main(String[] args) throws InterruptedException {
         Thread1 thread1 = new Thread1();
         thread1.setName("product");
         thread1.start();
+
         Thread2 thread2 = new Thread2();
-        thread2.setName("cunsumer");
+        thread2.setName("consumer");
         thread2.start();
     }
 

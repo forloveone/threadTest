@@ -1,6 +1,5 @@
 package com.example.thread.executor;
 
-import com.example.thread.RemoveIntger2Thread;
 import com.google.common.collect.Lists;
 import org.apache.commons.lang3.RandomUtils;
 import org.junit.Before;
@@ -8,10 +7,7 @@ import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
+import java.util.concurrent.*;
 
 /**
  * todo
@@ -88,4 +84,30 @@ public class ThreadFind {
         return Lists.partition(list, groupSize); // 使用guava
     }
     //---------------------------------------把list平均成多少份---------
+
+    class RemoveIntger2Thread implements Callable<List> {
+
+        private List<Integer> list;
+
+        public RemoveIntger2Thread(List<Integer> list) {
+            this.list = list;
+        }
+
+        public List<Integer> getList() {
+            return list;
+        }
+
+        @Override
+        public List call() throws Exception {
+//        while (iterator.hasNext()) {
+//            Integer next = iterator.next();
+//            if (next == 2) {
+//                iterator.remove();
+//            }
+//        }
+            list.removeIf(next -> next == 2);
+            return list;
+        }
+    }
+
 }
